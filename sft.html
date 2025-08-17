@@ -1,0 +1,1743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SFT Marks Analysis Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        /* Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333; /* Default text color */
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        /* Dark Mode Styles */
+        body.dark-mode {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: #ecf0f1; /* Light text for dark mode */
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        body.dark-mode .container {
+            background: rgba(44, 62, 80, 0.95);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative; /* For dark mode toggle positioning */
+        }
+
+        body.dark-mode .header {
+            background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .dark-mode-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.3s ease;
+        }
+
+        .dark-mode-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .dark-mode-toggle .icon {
+            font-size: 1.2rem;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .form-section, .stat-card, .chart-container, .exam-table {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e0e0e0;
+            transition: background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+
+        body.dark-mode .form-section,
+        body.dark-mode .stat-card,
+        body.dark-mode .chart-container,
+        body.dark-mode .exam-table {
+            background: #3b5064;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border-color: #4e6e87;
+        }
+
+        .form-section h2, .stat-card h3, .chart-container h3, .exam-table h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #4facfe;
+            padding-bottom: 10px;
+        }
+
+        body.dark-mode .form-section h2,
+        body.dark-mode .stat-card h3,
+        body.dark-mode .chart-container h3,
+        body.dark-mode .exam-table h2 {
+            color: #ecf0f1;
+            border-color: #1abc9c;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        body.dark-mode .form-group label {
+            color: #bdc3c7;
+        }
+
+        .form-group input, .form-group select {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+            color: #333;
+        }
+
+        body.dark-mode .form-group input,
+        body.dark-mode .form-group select {
+            background: #4e6e87;
+            border-color: #6a8ba3;
+            color: #ecf0f1;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        body.dark-mode .form-group input:focus,
+        body.dark-mode .form-group select:focus {
+            border-color: #1abc9c;
+            box-shadow: 0 0 0 3px rgba(26, 188, 156, 0.3);
+        }
+
+        .paper-type-info {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #666;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        body.dark-mode .paper-type-info {
+            background: #4e6e87;
+            color: #bdc3c7;
+        }
+
+        /* --- Reverted Layout for Form Grid --- */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Horizontal layout */
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .marks-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Horizontal layout */
+            gap: 15px;
+            margin-top: 15px;
+        }
+        /* --- End Reverted Layout --- */
+
+        .marks-group {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        body.dark-mode .marks-group {
+            background: #4e6e87;
+            border-color: #6a8ba3;
+        }
+
+        .marks-group h4 {
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 14px;
+        }
+
+        body.dark-mode .marks-group h4 {
+            color: #ecf0f1;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
+        }
+
+        body.dark-mode .btn {
+            background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%);
+        }
+
+        body.dark-mode .btn:hover {
+            box-shadow: 0 10px 20px rgba(26, 188, 156, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        }
+
+        body.dark-mode .btn-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .btn-edit {
+            background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
+            color: #333;
+        }
+
+        body.dark-mode .btn-edit {
+            background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%);
+            color: #333;
+        }
+
+        .stat-card {
+            transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        body.dark-mode .stat-card h3 {
+            color: #ecf0f1;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .bbq-color { color: #4facfe; }
+        .model-color { color: #ff6b6b; }
+        .morning-color { color: #feca57; }
+        .essay-color { color: #9b59b6; }
+        .seq-color { color: #e67e22; }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        body.dark-mode .progress-bar {
+            background: #6a8ba3;
+        }
+
+        .progress-fill {
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+
+        .bbq-progress { background: linear-gradient(90deg, #4facfe, #00f2fe); }
+        .model-progress { background: linear-gradient(90deg, #ff6b6b, #ee5a24); }
+        .morning-progress { background: linear-gradient(90deg, #feca57, #ff9ff3); }
+        .essay-progress { background: linear-gradient(90deg, #9b59b6, #8e44ad); }
+        .seq-progress { background: linear-gradient(90deg, #e67e22, #d35400); }
+
+        body.dark-mode .bbq-progress { background: linear-gradient(90deg, #1abc9c, #16a085); }
+        body.dark-mode .model-progress { background: linear-gradient(90deg, #e74c3c, #c0392b); }
+        body.dark-mode .morning-progress { background: linear-gradient(90deg, #f1c40f, #f39c12); }
+        body.dark-mode .essay-progress { background: linear-gradient(90deg, #9b59b6, #8e44ad); } /* Keep as is or change based on preference */
+        body.dark-mode .seq-progress { background: linear-gradient(90deg, #e67e22, #d35400); } /* Keep as is or change based on preference */
+
+
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        /* --- NEW CSS RULE TO MAKE THE COMPARISON CHART LARGER --- */
+        #comparison-container {
+            grid-column: 1 / -1; /* This makes the element span the full width of the grid */
+        }
+
+        .chart-container {
+            /* Styles defined above for common elements */
+        }
+
+        .chart-container h3 {
+            /* Styles defined above for common elements */
+        }
+
+        .exam-table {
+            /* Styles defined above for common elements */
+        }
+
+        .exam-table h2 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        body.dark-mode .exam-table h2 {
+            background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: #333; /* Default table text */
+        }
+
+        body.dark-mode table {
+            color: #ecf0f1;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        body.dark-mode th, body.dark-mode td {
+            border-color: #4e6e87;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        body.dark-mode th {
+            background: #4e6e87;
+            color: #ecf0f1;
+        }
+
+        tr:hover {
+            background: rgba(79, 172, 254, 0.05);
+        }
+        body.dark-mode tr:hover {
+            background: rgba(26, 188, 156, 0.1);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-buttons button {
+            padding: 8px 15px;
+            font-size: 12px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+
+        body.dark-mode .empty-state {
+            color: #bdc3c7;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+        }
+
+        .paper-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .badge-bbq { background: #4facfe; }
+        .badge-model { background: #ff6b6b; }
+        .badge-morning { background: #feca57; color: #333; }
+
+        body.dark-mode .badge-bbq { background: #1abc9c; }
+        body.dark-mode .badge-model { background: #e74c3c; }
+        body.dark-mode .badge-morning { background: #f1c40f; color: #333; }
+
+        /* Grade specific styling for the table */
+        .grade-A { color: #28a745; font-weight: bold; } /* Green */
+        .grade-B { color: #007bff; font-weight: bold; } /* Blue */
+        .grade-C { color: #17a2b8; font-weight: bold; } /* Cyan */
+        .grade-S { color: #ffc107; font-weight: bold; } /* Yellow */
+        .grade-F { color: #dc3545; font-weight: bold; } /* Red */
+
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+
+            /* For smaller screens, keep the grid vertical */
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .marks-section {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 14px;
+            }
+
+            th, td {
+                padding: 10px 8px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .dark-mode-toggle {
+                top: 10px;
+                right: 10px;
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔬 SFT Marks Analysis</h1>
+            <p>Science for Technology Performance Dashboard</p>
+            <button id="darkModeToggle" class="dark-mode-toggle">
+                <span class="icon">💡</span> <span id="darkModeText">Auto</span>
+            </button>
+        </div>
+
+        <div class="main-content">
+            <div class="form-section">
+                <h2 id="form-title">📝 Add New Exam</h2>
+                <form id="examForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="examName">Exam Name</label>
+                            <input type="text" id="examName" required placeholder="e.g., Unit Test 1, Mid-term">
+                        </div>
+                        <div class="form-group">
+                            <label for="examDate">Date</label>
+                            <input type="date" id="examDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="paperType">Paper Type</label>
+                            <select id="paperType" required>
+                                <option value="">Select Paper Type</option>
+                                <option value="bbq">BBQ Paper (MCQ Only - Total: 15)</option>
+                                <option value="model">Model Paper (All Types - Total: 100)</option>
+                                <option value="morning">Morning Paper (MCQ Only - Total: 12-15)</option>
+                            </select>
+                            <div class="paper-type-info" id="paperInfo"></div>
+                        </div>
+                        <div class="form-group" id="morningTotalGroup" style="display: none;">
+                            <label for="morningTotal">Morning Paper Total</label>
+                            <select id="morningTotal">
+                                <option value="12">12 marks</option>
+                                <option value="15">15 marks</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="marks-section">
+                        <div class="marks-group">
+                            <h4>📝 MCQ Marks</h4>
+                            <div class="form-group">
+                                <input type="number" id="mcqMarks" required min="0" placeholder="MCQ marks">
+                            </div>
+                        </div>
+                        
+                        <div class="marks-group" id="essayGroup">
+                            <h4>📄 Essay Marks</h4>
+                            <div class="form-group">
+                                <input type="number" id="essayMarks" min="0" placeholder="Essay marks">
+                            </div>
+                        </div>
+                        
+                        <div class="marks-group" id="seqGroup">
+                            <h4>📋 SEQ Marks</h4>
+                            <div class="form-group">
+                                <input type="number" id="seqMarks" min="0" placeholder="SEQ marks">
+                            </div>
+                        </div>
+                        
+                        <div class="marks-group" id="combinedGroup">
+                            <h4>🔄 SEQ + Essay Combined</h4>
+                            <div class="form-group">
+                                <input type="number" id="combinedMarks" min="0" placeholder="Combined marks">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 20px;">
+                        <button type="submit" class="btn" id="submitBtn">Add Exam</button>
+                        <button type="button" class="btn btn-danger" id="cancelBtn" style="display: none;">Cancel</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <h3>📋 BBQ Papers</h3>
+                    <div class="stat-value bbq-color" id="bbqAvg">-</div>
+                    <div>Average Score</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill bbq-progress" id="bbqProgress" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <h3>📝 Model Papers</h3>
+                    <div class="stat-value model-color" id="modelAvg">-</div>
+                    <div>Average Score</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill model-progress" id="modelProgress" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <h3>🌅 Morning Papers</h3>
+                    <div class="stat-value morning-color" id="morningAvg">-</div>
+                    <div>Average Score</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill morning-progress" id="morningProgress" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <h3>📄 Essay Performance</h3>
+                    <div class="stat-value essay-color" id="essayAvg">-</div>
+                    <div>Average Score</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill essay-progress" id="essayProgress" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <h3>📋 SEQ Performance</h3>
+                    <div class="stat-value seq-color" id="seqAvg">-</div>
+                    <div>Average Score</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill seq-progress" id="seqProgress" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-section">
+                <div class="chart-container">
+                    <h3>📈 BBQ Paper Performance</h3>
+                    <canvas id="bbqChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>📊 Model Paper Performance</h3>
+                    <canvas id="modelChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>🌅 Morning Paper Performance</h3>
+                    <canvas id="morningChart"></canvas>
+                </div>
+                <div class="chart-container" id="comparison-container">
+                    <h3>🔄 All Papers Comparison</h3>
+                    <canvas id="comparisonChart"></canvas>
+                </div>
+            </div>
+
+            <div class="exam-table">
+                <h2>📈 Exam Results</h2>
+                <div id="tableContainer">
+                    <div class="empty-state">
+                        <h3>No exams added yet</h3>
+                        <p>Add your first exam above to start tracking your SFT performance!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let exams = [];
+        let editingId = null;
+        let charts = {};
+
+        // Paper type configurations
+        const paperConfigs = {
+            bbq: { total: 15, name: 'BBQ Paper', color: '#4facfe', mcqOnly: true },
+            // Changed model total to reflect the effective max after conversion for consistent percentage calc
+            model: { total: 100, name: 'Model Paper', color: '#ff6b6b', mcqOnly: false }, 
+            morning: { total: 15, name: 'Morning Paper', color: '#feca57', mcqOnly: true }
+        };
+
+        // Dark Mode Logic
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const darkModeText = document.getElementById('darkModeText');
+        const body = document.body;
+
+        // Function to set the theme
+        function setTheme(theme) {
+            if (theme === 'dark') {
+                body.classList.add('dark-mode');
+                darkModeText.textContent = 'Light';
+                darkModeToggle.querySelector('.icon').textContent = '☀️';
+            } else if (theme === 'light') {
+                body.classList.remove('dark-mode');
+                darkModeText.textContent = 'Dark';
+                darkModeToggle.querySelector('.icon').textContent = '💡';
+            } else { // 'auto' mode
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (prefersDark) {
+                    body.classList.add('dark-mode');
+                } else {
+                    body.classList.remove('dark-mode');
+                }
+                darkModeText.textContent = 'Auto';
+                darkModeToggle.querySelector('.icon').textContent = '💻'; // Computer icon for auto
+            }
+            localStorage.setItem('theme', theme);
+            // Re-render charts to apply new theme colors
+            updateCharts();
+        }
+
+        // Get initial theme from localStorage or system preference
+        function getInitialTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                return savedTheme;
+            }
+            return 'auto'; // Default to auto
+        }
+
+        // Apply initial theme
+        setTheme(getInitialTheme());
+
+        // Dark Mode Toggle Button Listener
+        darkModeToggle.addEventListener('click', function() {
+            const currentTheme = localStorage.getItem('theme') || 'auto';
+            if (currentTheme === 'auto') {
+                setTheme('dark');
+            } else if (currentTheme === 'dark') {
+                setTheme('light');
+            } else { // currentTheme === 'light'
+                setTheme('auto');
+            }
+        });
+
+        // Listen for system theme changes if in 'auto' mode
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (localStorage.getItem('theme') === 'auto') {
+                setTheme('auto'); // Re-apply auto theme based on new system preference
+            }
+        });
+
+
+        // Paper type change handler
+        document.getElementById('paperType').addEventListener('change', function() {
+            const paperType = this.value;
+            const morningTotalGroup = document.getElementById('morningTotalGroup');
+            const paperInfo = document.getElementById('paperInfo');
+            const essayGroup = document.getElementById('essayGroup');
+            const seqGroup = document.getElementById('seqGroup');
+            const combinedGroup = document.getElementById('combinedGroup');
+            const mcqMarksInput = document.getElementById('mcqMarks');
+            
+            // Reset all marks fields to empty strings for clarity
+            mcqMarksInput.value = '';
+            document.getElementById('essayMarks').value = '';
+            document.getElementById('seqMarks').value = '';
+            document.getElementById('combinedMarks').value = '';
+            
+            // Hide all by default, then show as needed
+            morningTotalGroup.style.display = 'none';
+            essayGroup.classList.add('hidden');
+            seqGroup.classList.add('hidden');
+            combinedGroup.classList.add('hidden');
+
+            if (paperType === 'morning') {
+                morningTotalGroup.style.display = 'block';
+                paperInfo.innerHTML = 'Morning papers are MCQ only. Select total marks below (MCQ max will be this total).';
+                mcqMarksInput.placeholder = 'MCQ marks (max: ' + document.getElementById('morningTotal').value + ')';
+            } else if (paperType === 'bbq') {
+                paperInfo.innerHTML = 'BBQ papers are MCQ only with 15 total marks (MCQ max: 15).';
+                mcqMarksInput.placeholder = 'MCQ marks (max: 15)';
+            } else if (paperType === 'model') {
+                paperInfo.innerHTML = 'Model papers include MCQ (50 marks), Essay (600 marks), and SEQ (400 marks). Essay/SEQ are scaled to 50 marks, combined with MCQ for a total of 100 marks.';
+                essayGroup.classList.remove('hidden');
+                seqGroup.classList.remove('hidden');
+                combinedGroup.classList.remove('hidden');
+                mcqMarksInput.placeholder = 'MCQ marks (max: 50)';
+            } else {
+                paperInfo.innerHTML = '';
+                mcqMarksInput.placeholder = 'MCQ marks'; // Generic placeholder
+            }
+        });
+
+        // Update MCQ placeholder if morning total changes
+        document.getElementById('morningTotal').addEventListener('change', function() {
+            const paperType = document.getElementById('paperType').value;
+            if (paperType === 'morning') {
+                document.getElementById('mcqMarks').placeholder = 'MCQ marks (max: ' + this.value + ')';
+            }
+        });
+
+
+        // Function to calculate grade for Model Papers
+        function calculateGrade(totalMark) {
+            if (totalMark >= 75) {
+                return 'A';
+            } else if (totalMark >= 65 && totalMark <= 74) {
+                return 'B';
+            } else if (totalMark >= 50 && totalMark <= 64) {
+                return 'C';
+            } else if (totalMark >= 35 && totalMark <= 49) {
+                return 'S';
+            } else {
+                return 'F';
+            }
+        }
+
+        // Load data from memory on page load
+        function loadData() {
+            // **CHANGE 1: Load data from localStorage**
+            exams = JSON.parse(localStorage.getItem('sftExams')) || [];
+            updateStats();
+            renderTable();
+            updateCharts();
+            // Trigger change event to set initial form state based on paperType
+            document.getElementById('paperType').dispatchEvent(new Event('change'));
+        }
+
+        // Form submission handler
+        document.getElementById('examForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const paperType = document.getElementById('paperType').value;
+            let totalMarksPossible = paperConfigs[paperType].total; // This is the conceptual total for the paper type
+            let mcqMaxForValidation = 0;
+            
+            if (paperType === 'morning') {
+                totalMarksPossible = parseInt(document.getElementById('morningTotal').value);
+                mcqMaxForValidation = totalMarksPossible;
+            } else if (paperType === 'bbq') {
+                mcqMaxForValidation = 15;
+            } else if (paperType === 'model') {
+                mcqMaxForValidation = 50;
+            }
+
+            const mcqMarks = parseInt(document.getElementById('mcqMarks').value);
+            const essayMarks = (paperType === 'model' ? parseInt(document.getElementById('essayMarks').value) : 0) || 0;
+            const seqMarks = (paperType === 'model' ? parseInt(document.getElementById('seqMarks').value) : 0) || 0;
+            const combinedMarks = (paperType === 'model' ? parseInt(document.getElementById('combinedMarks').value) : 0) || 0;
+
+
+            // Validation for MCQ marks based on paper type
+            if (isNaN(mcqMarks) || mcqMarks < 0 || mcqMarks > mcqMaxForValidation) {
+                alert(`Please enter valid MCQ marks between 0 and ${mcqMaxForValidation} for ${paperType === 'model' ? 'Model Paper' : paperType === 'bbq' ? 'BBQ Paper' : 'Morning Paper'}.`);
+                return;
+            }
+
+            // Basic validation for MCQ only papers
+            if ((paperType === 'bbq' || paperType === 'morning') && (essayMarks > 0 || seqMarks > 0 || combinedMarks > 0)) {
+                alert("For BBQ and Morning papers, only MCQ marks are applicable. Please clear other marks fields.");
+                return;
+            }
+
+            // Specific validation for Model Paper marks: Essay out of 600, SEQ out of 400
+            if (paperType === 'model') {
+                if (isNaN(essayMarks) || essayMarks < 0 || essayMarks > 600) {
+                    alert("For Model Paper: Essay marks must be between 0 and 600.");
+                    return;
+                }
+                if (isNaN(seqMarks) || seqMarks < 0 || seqMarks > 400) {
+                    alert("For Model Paper: SEQ marks must be between 0 and 400.");
+                    return;
+                }
+                if (isNaN(combinedMarks) || combinedMarks < 0 || combinedMarks > 1000) { // Combined is total of Essay+SEQ
+                    alert("For Model Paper: Combined SEQ + Essay marks must be between 0 and 1000.");
+                    return;
+                }
+                // Check if combined marks are consistent with individual essay/seq marks if both are entered
+                if ((essayMarks > 0 || seqMarks > 0) && combinedMarks > 0 && (essayMarks + seqMarks !== combinedMarks)) {
+                     // Optionally, you might want to force one or the other, or sum them if user wants to enter both
+                     // For simplicity, let's just warn for now.
+                     // alert("Warning: Individual Essay/SEQ marks and Combined marks do not match. Using Combined marks for calculation if provided, else sum of Essay+SEQ.");
+                }
+            }
+            
+            let calculatedTotalScored = 0;
+            let calculatedPercentage = 0;
+            let grade = '-'; // Default grade
+
+            if (paperType === 'model') {
+                // Calculation for Model Paper based on your specific requirements
+                const finalMCQMarks = mcqMarks; // MCQ out of 50
+                const finalSEQEssayMarks = (combinedMarks > 0) ? (combinedMarks / 1000) * 50 : ((essayMarks + seqMarks) / 1000) * 50; // Scale SEQ+Essay to 50
+                
+                calculatedTotalScored = finalMCQMarks + finalSEQEssayMarks; // This will be out of 100
+                calculatedPercentage = calculatedTotalScored; // Since it's out of 100, the score is directly the percentage
+                grade = calculateGrade(calculatedPercentage); // Apply the grading logic
+            } else {
+                // Existing logic for BBQ and Morning papers
+                calculatedTotalScored = mcqMarks; // Scored raw marks
+                calculatedPercentage = (mcqMarks / totalMarksPossible) * 100; // Percentage based on specific total
+            }
+
+            const formData = {
+                id: editingId || Date.now(),
+                name: document.getElementById('examName').value,
+                date: document.getElementById('examDate').value,
+                paperType: paperType,
+                totalMarks: totalMarksPossible, // This total is the base for percentage, 100 for model. For BBQ/Morning, it's their max.
+                mcqMarks: mcqMarks,
+                essayMarks: essayMarks, // Stored raw
+                seqMarks: seqMarks,     // Stored raw
+                combinedMarks: combinedMarks, // Stored raw
+                calculatedTotalScored: calculatedTotalScored, // The actual calculated score out of 100 (for model) or paper total for BBQ/Morning
+                calculatedPercentage: calculatedPercentage, // The percentage out of 100
+                grade: grade // The calculated grade for Model Papers
+            };
+
+
+            if (editingId) {
+                const index = exams.findIndex(exam => exam.id === editingId);
+                exams[index] = formData;
+                editingId = null;
+                document.getElementById('form-title').textContent = '📝 Add New Exam';
+                document.getElementById('submitBtn').textContent = 'Add Exam';
+                document.getElementById('cancelBtn').style.display = 'none';
+            } else {
+                exams.push(formData);
+            }
+
+            // **CHANGE 2: Save data to localStorage after adding/editing**
+            localStorage.setItem('sftExams', JSON.stringify(exams));
+            this.reset();
+            // Re-trigger change to reset the paper type display for the next input
+            document.getElementById('paperType').dispatchEvent(new Event('change'));
+
+            updateStats();
+            renderTable();
+            updateCharts();
+        });
+
+        // Cancel edit
+        document.getElementById('cancelBtn').addEventListener('click', function() {
+            editingId = null;
+            document.getElementById('form-title').textContent = '📝 Add New Exam';
+            document.getElementById('submitBtn').textContent = 'Add Exam';
+            document.getElementById('cancelBtn').style.display = 'none';
+            document.getElementById('examForm').reset();
+            // Re-trigger change to reset the paper type display
+            document.getElementById('paperType').dispatchEvent(new Event('change'));
+        });
+
+        // Update statistics
+        function updateStats() {
+            const bbqExams = exams.filter(exam => exam.paperType === 'bbq');
+            const modelExams = exams.filter(exam => exam.paperType === 'model');
+            const morningExams = exams.filter(exam => exam.paperType === 'morning');
+            // For Essay and SEQ averages, consider only model papers
+            const essayExams = exams.filter(exam => exam.paperType === 'model'); 
+            const seqExams = exams.filter(exam => exam.paperType === 'model'); 
+
+            // BBQ Stats
+            if (bbqExams.length > 0) {
+                const bbqPercentages = bbqExams.map(exam => exam.calculatedPercentage);
+                const bbqAvg = bbqPercentages.reduce((a, b) => a + b, 0) / bbqPercentages.length;
+                document.getElementById('bbqAvg').textContent = bbqAvg.toFixed(1) + '%';
+                document.getElementById('bbqProgress').style.width = bbqAvg + '%';
+            } else {
+                document.getElementById('bbqAvg').textContent = '-';
+                document.getElementById('bbqProgress').style.width = '0%';
+            }
+
+            // Model Stats - Now uses the calculatedPercentage which is out of 100
+            if (modelExams.length > 0) {
+                const modelPercentages = modelExams.map(exam => exam.calculatedPercentage);
+                const modelAvg = modelPercentages.reduce((a, b) => a + b, 0) / modelPercentages.length;
+                document.getElementById('modelAvg').textContent = modelAvg.toFixed(1) + '%';
+                document.getElementById('modelProgress').style.width = modelAvg + '%';
+            } else {
+                document.getElementById('modelAvg').textContent = '-';
+                document.getElementById('modelProgress').style.width = '0%';
+            }
+
+            // Morning Stats
+            if (morningExams.length > 0) {
+                const morningPercentages = morningExams.map(exam => exam.calculatedPercentage);
+                const morningAvg = morningPercentages.reduce((a, b) => a + b, 0) / morningPercentages.length;
+                document.getElementById('morningAvg').textContent = morningAvg.toFixed(1) + '%';
+                document.getElementById('morningProgress').style.width = morningAvg + '%';
+            } else {
+                document.getElementById('morningAvg').textContent = '-';
+                document.getElementById('morningProgress').style.width = '0%';
+            }
+
+            // Essay Stats (Based on raw essay marks for model papers)
+            if (essayExams.length > 0) {
+                let totalScoredEssay = 0;
+                let totalPossibleEssay = 0;
+                essayExams.forEach(exam => {
+                    // Use combinedMarks if available, otherwise sum individual. 
+                    // This implies the 600/400 split for combined is theoretical total.
+                    // For average calculation, it's better to use the raw scores against their theoretical max.
+                    const essayComponentScore = exam.combinedMarks > 0 ? (exam.combinedMarks * (600/1000)) : exam.essayMarks; // Estimate essay portion if combined, else use essayMarks
+                    totalScoredEssay += essayComponentScore;
+                    totalPossibleEssay += 600; // Total possible marks for Essay in a model paper
+                });
+                const essayAvg = (totalPossibleEssay > 0) ? (totalScoredEssay / totalPossibleEssay) * 100 : 0;
+                document.getElementById('essayAvg').textContent = essayAvg.toFixed(1) + '%';
+                document.getElementById('essayProgress').style.width = essayAvg + '%';
+            } else {
+                document.getElementById('essayAvg').textContent = '-';
+                document.getElementById('essayProgress').style.width = '0%';
+            }
+
+            // SEQ Stats (Based on raw SEQ marks for model papers)
+            if (seqExams.length > 0) {
+                let totalScoredSeq = 0;
+                let totalPossibleSeq = 0;
+                seqExams.forEach(exam => {
+                    const seqComponentScore = exam.combinedMarks > 0 ? (exam.combinedMarks * (400/1000)) : exam.seqMarks; // Estimate SEQ portion if combined, else use seqMarks
+                    totalScoredSeq += seqComponentScore;
+                    totalPossibleSeq += 400; // Total possible marks for SEQ in a model paper
+                });
+                const seqAvg = (totalPossibleSeq > 0) ? (totalScoredSeq / totalPossibleSeq) * 100 : 0;
+                document.getElementById('seqAvg').textContent = seqAvg.toFixed(1) + '%';
+                document.getElementById('seqProgress').style.width = seqAvg + '%';
+            } else {
+                document.getElementById('seqAvg').textContent = '-';
+                document.getElementById('seqProgress').style.width = '0%';
+            }
+        }
+
+
+        // Update charts with detailed tooltips
+        function updateCharts() {
+            updateBBQChart();
+            updateModelChart();
+            updateMorningChart();
+            updateComparisonChart();
+        }
+
+        function updateBBQChart() {
+            const bbqExams = exams.filter(exam => exam.paperType === 'bbq');
+            const ctx = document.getElementById('bbqChart').getContext('2d');
+            
+            if (charts.bbq) {
+                charts.bbq.destroy();
+            }
+
+            if (bbqExams.length === 0) {
+                charts.bbq = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['No data'],
+                        datasets: [{
+                            label: 'No BBQ papers yet',
+                            data: [0],
+                            borderColor: '#4facfe',
+                            backgroundColor: 'rgba(79, 172, 254, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    color: body.classList.contains('dark-mode') ? '#bdc3c7' : '#555'
+                                },
+                                grid: {
+                                    color: body.classList.contains('dark-mode') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    color: body.classList.contains('dark-mode') ? '#bdc3c7' : '#555'
+                                },
+                                grid: {
+                                    color: body.classList.contains('dark-mode') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                                }
+                            }
+                        },
+                        plugins: {
+                            tooltip: { enabled: false } // No tooltip for "no data"
+                        }
+                    }
+                });
+                return;
+            }
+
+            const labels = bbqExams.map(exam => exam.name);
+            const percentages = bbqExams.map(exam => exam.calculatedPercentage); // Use calculated percentage
+
+            charts.bbq = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'BBQ Performance (%)',
+                        data: percentages,
+                        borderColor: body.classList.contains('dark-mode') ? '#1abc9c' : '#4facfe', /* Dynamic color */
+                        backgroundColor: body.classList.contains('dark-mode') ? 'rgba(26, 188, 156, 0.1)' : 'rgba(79, 172, 254, 0.1)', /* Dynamic color */
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: body.classList.contains('dark-mode') ? '#1abc9c' : '#4facfe', /* Dynamic color */
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    const index = tooltipItems[0].dataIndex;
+                                    const exam = bbqExams[index];
+                                    return exam.name + ' - ' + new Date(exam.date).toLocaleDateString();
+                                },
+                                label: function(context) {
+                                    const index = context.dataIndex;
+                                    const exam = bbqExams[index];
+                                    return `Score: ${exam.mcqMarks} / ${exam.totalMarks} (${context.raw.toFixed(1)}%)`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Exam Name',
+                                color: body.classList.contains('dark-mode') ? '#ecf0f1' : '#333'
+                            },
+                            ticks: {
+                                color: body.classList.contains('dark-mode') ? '#bdc3c7' : '#555'
+                            },
+                            grid: {
+                                color: body.classList.contains('dark-mode') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Percentage Score (%)',
+                                color: body.classList.contains('dark-mode') ? '#ecf0f1' : '#333'
+                            },
+                            ticks: {
+                                color: body.classList.contains('dark-mode') ? '#bdc3c7' : '#555'
+                            },
+                            grid: {
+                                color: body.classList.contains('dark-mode') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateModelChart() {
+            const modelExams = exams.filter(exam => exam.paperType === 'model');
+            const ctx = document.getElementById('modelChart').getContext('2d');
+
+            if (charts.model) {
+                charts.model.destroy();
+            }
+
+            if (modelExams.length === 0) {
+                charts.model = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['No data'],
+                        datasets: [{
+                            label: 'No Model papers yet',
+                            data: [0],
+                            borderColor: '#ff6b6b',
+                            backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    color: body.classList.contains('dark-mode') ? '#bdc3c7' : '#555'
+                                },
+                                grid: {
+                                    color: body.classList.contains('dark-mode') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    color: body.classList.contains('dark-mode') ? '#bdc3c7' : '#555'
+                                },
+                                grid: {
+                                    color: body.classList.contains('dark-mode') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                                }
+                            }
+                        },
+                        plugins: {
+                            tooltip: { enabled: false }
+                        }
+                    }
+                });
+                return;
+            }
+
+            const labels = modelExams.map(exam => exam.name);
+            const data = modelExams.map(exam => exam.calculatedPercentage); // Use calculated percentage
+
+            charts.model = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Model Performance (%)',
+                        data: data,
+                        borderColor: body.classList.contains('dark-mode') ? '#e74c3c' : '#ff6b6b', /* Dynamic color */
+                        backgroundColor: body.classList.contains('dark-mode') ? 'rgba(231, 76, 60, 0.1)' : 'rgba(255, 107, 107, 0.1)', /* Dynamic color */
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: body.classList.contains('dark-mode') ? '#e74c3c' : '#ff6b6b', /* Dynamic color */
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    const index = tooltipItems[0].dataIndex;
+                                    const exam = modelExams[index];
+                                    return exam.name + ' - ' + new Date(exam.date).toLocaleDateString();
+                                },
+                                label: function(context) {
+                                    const index = context.dataIndex;
+                                    const exam = modelExams[index];
+                                    // Display raw marks for MCQ, Essay, SEQ, Combined as per your fields
+                                    // Note: calculatedTotalScored for model papers is out of 100
+                                    return [
+                                        `Overall: ${exam.calculatedTotalScored.toFixed(2)} / 100 (${context.raw.toFixed(1)}%)`,
+                                        `MCQ: ${exam.mcqMarks} / 50`,
+                                        `Essay: ${exam.essayMarks} / 600`,
+                                        `SEQ: ${exam.seqMarks} / 400`,
+                                        `Combined (Raw): ${exam.combinedMarks} / 1000`
+                                    ];
+                                },
+                                afterBody: function(tooltipItems) {
+                                    const index = tooltipItems[0].dataIndex;
+                                    const exam = modelExams[index];
+                                    return `Grade: ${exam.grade}`; // Display the grade
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Exam Name',
+                                color: body.classList.contains('dark-mode') ? '#ecf0f1' : '#333'
+                            },
+                            ticks: {
+                                color: body.classList.contains('dark-mode') ? '#bdc3c7' : '#555'
+                            },
+                            grid: {
+                                color: body.classList.contains('dark-mode') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Percentage Score (%)',
+                                color: body.classList.contains('dark-mode') ? '#ecf0f1' : '#333'
+                            },
+                            ticks: {
+                                color: body.classList.contains('dark-mode') ? '#bdc3c7' : '#555'
+                            },
+                            grid: {
+                                color: body.classList.contains('dark-mode') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateMorningChart() {
+            const morningExams = exams.filter(exam => exam.paperType === 'morning');
+            const ctx = document.getElementById('morningChart').getContext('2d');
+
+            if (charts.morning) {
+                charts.morning.destroy();
+            }
+
+            if (morningExams.length === 0) {
+                charts.morning = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['No data'],
+                        datasets: [{
+                            label: 'No Morning papers yet',
+                            data: [0],
+                            borderColor: '#feca57',
+                            backgroundColor: 'rgba(254, 202, 87, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    color: body.classList.contains('dark-mode') ? '#bdc3c7' : '#555'
+                                },
+                                grid: {
+                                    color: body.classList.contains('dark-mode') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    color: body.classList.contains('dark-mode') ? '#bdc3c7' : '#555'
+                                },
+                                grid: {
+                                    color: body.classList.contains('dark-mode') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                                }
+                            }
+                        },
+                        plugins: {
+                            tooltip: { enabled: false }
+                        }
+                    }
+                });
+                return;
+            }
+
+            const labels = morningExams.map(exam => exam.name);
+            const percentages = morningExams.map(exam => exam.calculatedPercentage); // Use calculated percentage
+
+            charts.morning = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Morning Performance (%)',
+                        data: percentages,
+                        borderColor: body.classList.contains('dark-mode') ? '#f1c40f' : '#feca57', /* Dynamic color */
+                        backgroundColor: body.classList.contains('dark-mode') ? 'rgba(241, 196, 15, 0.1)' : 'rgba(254, 202, 87, 0.1)', /* Dynamic color */
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: body.classList.contains('dark-mode') ? '#f1c40f' : '#feca57', /* Dynamic color */
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    const index = tooltipItems[0].dataIndex;
+                                    const exam = morningExams[index];
+                                    return exam.name + ' - ' + new Date(exam.date).toLocaleDateString();
+                                },
+                                label: function(context) {
+                                    const index = context.dataIndex;
+                                    const exam = morningExams[index];
+                                    // Display MCQ marks out of their specific total for morning papers
+                                    return `Score: ${exam.mcqMarks} / ${exam.totalMarks} (${context.raw.toFixed(1)}%)`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Exam Name',
+                                color: body.classList.contains('dark-mode') ? '#ecf0f1' : '#333'
+                            },
+                            ticks: {
+                                color: body.classList.contains('dark-mode') ? '#bdc3c7' : '#555'
+                            },
+                            grid: {
+                                color: body.classList.contains('dark-mode') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Percentage Score (%)',
+                                color: body.classList.contains('dark-mode') ? '#ecf0f1' : '#333'
+                            },
+                            ticks: {
+                                color: body.classList.contains('dark-mode') ? '#bdc3c7' : '#555'
+                            },
+                            grid: {
+                                color: body.classList.contains('dark-mode') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateComparisonChart() {
+            const ctx = document.getElementById('comparisonChart').getContext('2d');
+
+            if (charts.comparison) {
+                charts.comparison.destroy();
+            }
+
+            if (exams.length === 0) {
+                charts.comparison = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['No data'],
+                        datasets: [{
+                            label: 'Add exams to compare',
+                            data: [0],
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    color: body.classList.contains('dark-mode') ? '#bdc3c7' : '#555'
+                                },
+                                grid: {
+                                    color: body.classList.contains('dark-mode') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    color: body.classList.contains('dark-mode') ? '#bdc3c7' : '#555'
+                                },
+                                grid: {
+                                    color: body.classList.contains('dark-mode') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                                }
+                            }
+                        },
+                        plugins: {
+                            tooltip: { enabled: false }
+                        }
+                    }
+                });
+                return;
+            }
+
+            const labels = exams.map(exam => `${exam.name} (${new Date(exam.date).toLocaleDateString()})`);
+            const bbqData = exams.map(exam => exam.paperType === 'bbq' ? exam.calculatedPercentage : null);
+            const modelData = exams.map(exam => exam.paperType === 'model' ? exam.calculatedPercentage : null);
+            const morningData = exams.map(exam => exam.paperType === 'morning' ? exam.calculatedPercentage : null);
+
+            charts.comparison = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'BBQ Paper',
+                            data: bbqData,
+                            borderColor: body.classList.contains('dark-mode') ? '#1abc9c' : '#4facfe',
+                            backgroundColor: body.classList.contains('dark-mode') ? 'rgba(26, 188, 156, 0.1)' : 'rgba(79, 172, 254, 0.1)',
+                            tension: 0.4,
+                            fill: false,
+                            spanGaps: true, // Connect null values
+                            pointBackgroundColor: body.classList.contains('dark-mode') ? '#1abc9c' : '#4facfe',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 6,
+                            pointHoverRadius: 8
+                        },
+                        {
+                            label: 'Model Paper',
+                            data: modelData,
+                            borderColor: body.classList.contains('dark-mode') ? '#e74c3c' : '#ff6b6b',
+                            backgroundColor: body.classList.contains('dark-mode') ? 'rgba(231, 76, 60, 0.1)' : 'rgba(255, 107, 107, 0.1)',
+                            tension: 0.4,
+                            fill: false,
+                            spanGaps: true,
+                            pointBackgroundColor: body.classList.contains('dark-mode') ? '#e74c3c' : '#ff6b6b',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 6,
+                            pointHoverRadius: 8
+                        },
+                        {
+                            label: 'Morning Paper',
+                            data: morningData,
+                            borderColor: body.classList.contains('dark-mode') ? '#f1c40f' : '#feca57',
+                            backgroundColor: body.classList.contains('dark-mode') ? 'rgba(241, 196, 15, 0.1)' : 'rgba(254, 202, 87, 0.1)',
+                            tension: 0.4,
+                            fill: false,
+                            spanGaps: true,
+                            pointBackgroundColor: body.classList.contains('dark-mode') ? '#f1c40f' : '#feca57',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 6,
+                            pointHoverRadius: 8
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    const index = tooltipItems[0].dataIndex;
+                                    const exam = exams[index];
+                                    return exam.name + ' - ' + new Date(exam.date).toLocaleDateString();
+                                },
+                                label: function(context) {
+                                    const index = context.dataIndex;
+                                    const exam = exams[index];
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.raw !== null) {
+                                        // Use calculatedTotalScored for display in tooltip if available
+                                        let mcqDisplayTotal = (exam.paperType === 'model') ? 50 : exam.totalMarks;
+                                        return `${label}MCQ: ${exam.mcqMarks} / ${mcqDisplayTotal} (${context.raw.toFixed(1)}%)`;
+                                    }
+                                    return label + 'N/A';
+                                },
+                                afterBody: function(tooltipItems) {
+                                    const index = tooltipItems[0].dataIndex;
+                                    const exam = exams[index];
+                                    if (exam.paperType === 'model' && exam.grade) {
+                                        return `Grade: ${exam.grade}`;
+                                    }
+                                    return '';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Exam',
+                                color: body.classList.contains('dark-mode') ? '#ecf0f1' : '#333'
+                            },
+                            ticks: {
+                                color: body.classList.contains('dark-mode') ? '#bdc3c7' : '#555'
+                            },
+                            grid: {
+                                color: body.classList.contains('dark-mode') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Percentage Score (%)',
+                                color: body.classList.contains('dark-mode') ? '#ecf0f1' : '#333'
+                            },
+                            ticks: {
+                                color: body.classList.contains('dark-mode') ? '#bdc3c7' : '#555'
+                            },
+                            grid: {
+                                color: body.classList.contains('dark-mode') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Render table
+        function renderTable() {
+            const tableContainer = document.getElementById('tableContainer');
+            if (exams.length === 0) {
+                tableContainer.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No exams added yet</h3>
+                        <p>Add your first exam above to start tracking your SFT performance!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let tableHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Exam Name</th>
+                            <th>Date</th>
+                            <th>Paper Type</th>
+                            <th>MCQ</th>
+                            <th>Essay (Raw)</th>
+                            <th>SEQ (Raw)</th>
+                            <th>Combined (Raw)</th>
+                            <th>Combined (Scaled)</th>
+                            <th>Calculated Score</th>
+                            <th>Percentage</th>
+                            <th>Grade</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            exams.sort((a, b) => new Date(a.date) - new Date(b.date)).forEach(exam => {
+                // Determine the correct total for MCQ display
+                const mcqDisplayTotal = (exam.paperType === 'model') ? 50 : exam.totalMarks;
+                
+                const totalScoredDisplay = exam.calculatedTotalScored.toFixed(2); // For Model, this is out of 100
+                const percentageDisplay = exam.calculatedPercentage.toFixed(1);
+
+                const paperBadgeClass = `badge-${exam.paperType}`;
+                const paperTypeName = paperConfigs[exam.paperType].name;
+                
+                // Determine grade class for styling
+                const gradeClass = exam.grade ? `grade-${exam.grade}` : '';
+
+                // Calculate scaled combined marks for display
+                let scaledCombinedDisplay = '-';
+                if (exam.paperType === 'model') {
+                    // Use combinedMarks if available, otherwise sum essay and seq
+                    const rawCombined = exam.combinedMarks > 0 ? exam.combinedMarks : exam.essayMarks + exam.seqMarks;
+                    const scaledValue = (rawCombined / 1000) * 50;
+                    scaledCombinedDisplay = `${scaledValue.toFixed(2)} / 50`;
+                }
+
+                tableHTML += `
+                    <tr>
+                        <td>${exam.name}</td>
+                        <td>${new Date(exam.date).toLocaleDateString()}</td>
+                        <td><span class="paper-badge ${paperBadgeClass}">${paperTypeName}</span></td>
+                        <td>${exam.mcqMarks} / ${mcqDisplayTotal}</td>
+                        <td>${exam.paperType === 'model' ? `${exam.essayMarks} / 600` : '-'}</td>
+                        <td>${exam.paperType === 'model' ? `${exam.seqMarks} / 400` : '-'}</td>
+                        <td>${exam.paperType === 'model' ? `${exam.combinedMarks} / 1000` : '-'}</td>
+                        <td>${scaledCombinedDisplay}</td>
+                        <td>${totalScoredDisplay} / ${exam.paperType === 'model' ? 100 : exam.totalMarks}</td>
+                        <td>${percentageDisplay}%</td>
+                        <td class="${gradeClass}">${exam.grade || '-'}</td>
+                        <td class="action-buttons">
+                            <button class="btn btn-edit" onclick="editExam(${exam.id})">Edit</button>
+                            <button class="btn btn-danger" onclick="deleteExam(${exam.id})">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+            tableContainer.innerHTML = tableHTML;
+        }
+
+        // Edit exam
+        function editExam(id) {
+            const exam = exams.find(e => e.id === id);
+            if (exam) {
+                editingId = id;
+                document.getElementById('form-title').textContent = `✏️ Edit Exam: ${exam.name}`;
+                document.getElementById('submitBtn').textContent = 'Update Exam';
+                document.getElementById('cancelBtn').style.display = 'inline-block';
+
+                document.getElementById('examName').value = exam.name;
+                document.getElementById('examDate').value = exam.date;
+                document.getElementById('paperType').value = exam.paperType;
+                
+                // Manually trigger change to update form fields visibility and MCQ placeholder
+                const event = new Event('change');
+                document.getElementById('paperType').dispatchEvent(event);
+
+                if (exam.paperType === 'morning') {
+                    document.getElementById('morningTotal').value = exam.totalMarks;
+                    // Trigger change on morningTotal to update MCQ placeholder if it's currently selected
+                    document.getElementById('morningTotal').dispatchEvent(event); 
+                }
+                
+                document.getElementById('mcqMarks').value = exam.mcqMarks;
+                // Only populate these if it's a model paper, otherwise they remain hidden and 0
+                if (exam.paperType === 'model') {
+                    document.getElementById('essayMarks').value = exam.essayMarks;
+                    document.getElementById('seqMarks').value = exam.seqMarks;
+                    document.getElementById('combinedMarks').value = exam.combinedMarks;
+                } else {
+                    document.getElementById('essayMarks').value = '';
+                    document.getElementById('seqMarks').value = '';
+                    document.getElementById('combinedMarks').value = '';
+                }
+
+                // Scroll to form
+                document.getElementById('examForm').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // Delete exam
+        function deleteExam(id) {
+            if (confirm('Are you sure you want to delete this exam entry?')) {
+                exams = exams.filter(exam => exam.id !== id);
+                // **CHANGE 3: Save data to localStorage after deleting**
+                localStorage.setItem('sftExams', JSON.stringify(exams));
+                updateStats();
+                renderTable();
+                updateCharts();
+            }
+        }
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', loadData);
+    </script>
+</body>
+</html>
